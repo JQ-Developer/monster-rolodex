@@ -1,6 +1,9 @@
 import "./App.css";
 import { Component } from "react";
 
+import { CardList } from "./components/card-list/card-list.component";
+import { SearchBox } from "./components/search-box/search-box.component";
+
 //! React permite regresar clases, que a diferancia de las funciones permite más funcionalidades.
 //? Para poder usar una clase en React se debe importar "Component" desde react, eso da acceso a un metódo render()
 //? Esto nos permite poner javaScript dentro de elementos, da acceso a el "State"
@@ -80,11 +83,15 @@ function App() {
 //? Uno de estos métodos es "componentDidMount()" el cual es llamado cuado el componente es puesto o "montado" en la página.
 
 //? Podemos combinar elementos de HTML con elementos creados por nosotrso mismos, empiezan con Mayúscula a diferencia de los elementos de HTML
+//? Cada componenete es una función que reenderiza
+//? this.setState es una funcion asynchronous! y ese metodo nos da un segundo argumento, que es una funcion callback
+//? SyntheticEvent son eventos de react, como onChange, que es diferente de onchange event de html, básicamente hace que los eventos sean compatibles en todos los navegadores
+//? los functional components a diferencia de las clases no tienen los lifecycle methods, tampoco tiene acceso internal state, son mayormente para reenderizar html, si no tienes que usar esas cosas de clases es mejor que hagas un componente, más fácil de leer y más reusable
 
 class App extends Component {
   constructor() {
     super();
-
+    //! LA INFORMACION INGRESA A LA APLICACION COMO STATE Y SE PROPAGA POR LOS COMPONENTES COMO PROPS
     this.state = {
       monsters: [
         /*
@@ -101,8 +108,21 @@ class App extends Component {
           id: "cerebro",
         },*/
       ],
+      searchField: "",
     };
+
+    //Estoy definiendo el contexto de "this" en esta fincion, ligandolo mediante bind al objeto en que se encuentra
+    this.handleChange = this.handleChange.bind(this);
   }
+
+  //Sin embargo usando arrow functions no me tengo que preocupar por eso ya que ellas no tienen un this definido, por lo que puedo amarrarlas al contexto donde fueron creadas, que este caso es la clase. A esto se le llama "lexical scope"
+
+  /*handleChange(e) {
+    this.setState({ searchField: e.target.value });
+  }*/
+  handleChange = (e) => {
+    this.setState({ searchField: e.target.value });
+  };
 
   componentDidMount() {
     fetch("https://jsonplaceholder.typicode.com/users")
@@ -111,11 +131,25 @@ class App extends Component {
   }
 
   render() {
+    const { monsters, searchField } = this.state;
+
+    //Esto filtra los monstros por el nombre, el metodo includes lo que hacer es buscar en la string a ver si tiene la cadena de caracteres que introdujo el usuario
+    const filterMonsters = monsters.filter((monster) =>
+      monster.name.toLowerCase().includes(searchField.toLowerCase())
+    );
+
     return (
       <div className="App">
-        {this.state.monsters.map((monsters) => (
-          <h1 key={monsters.id}>{monsters.name}</h1>
-        ))}
+        <h1>Monster Rolodex</h1>
+        {/* este el sistema de busqueda */}
+
+        <SearchBox
+          placeholder="search for a buddy"
+          handleChange={this.handleChange}
+        />
+
+        {/* Le estpoy pasando un prop a mi componente  */}
+        <CardList monsters={filterMonsters} /*name="José"*/></CardList>
       </div>
     );
   }
